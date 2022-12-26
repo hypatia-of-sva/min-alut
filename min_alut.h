@@ -87,8 +87,8 @@ ALvoid* alutLoadMemoryWaveformAU(ALsizei* length, ALenum waveshape, ALfloat freq
 	return stream_data;
 }
 
-ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_length, ALenum* format, ALsizei* size, ALfloat* frequency) {
-	const char* stream_data = param_data;
+ALvoid* alutLoadMemoryFromFileImage(ALvoid* param_data, ALsizei param_length, ALenum* format, ALsizei* size, ALfloat* frequency) {
+	char* stream_data = param_data;
 	size_t remainingLength = param_length;
 
 	/* test from Harbison & Steele, "C - A Reference Manual", section 6.1.2 */
@@ -102,7 +102,7 @@ ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_leng
 	/* For other file formats, read the quasi-standard four byte magic number */
 	if (remainingLength < 4) return NULL; //ALUT_ERROR_CORRUPT_OR_TRUNCATED_DATA
 	int32_t magic = ((int32_t)stream_data[0] << 24) | ((int32_t)stream_data[1] << 16) | ((int32_t)stream_data[2] << 8) | ((int32_t)stream_data[3]);
-	stream_data = ((const char*)(stream_data)+4); remainingLength -= 4;
+	stream_data = ((char*)(stream_data)+4); remainingLength -= 4;
 
 	if (magic == 0x52494646) { /* Magic number 'RIFF' == Microsoft '.wav' format */
 		ALboolean found_header = AL_FALSE;
@@ -110,13 +110,13 @@ ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_leng
 		if (remainingLength < 8) return NULL; //ALUT_ERROR_CORRUPT_OR_TRUNCATED_DATA
 		uint32_t chunkLength = ((uint32_t)stream_data[3] << 24) | ((uint32_t)stream_data[2] << 16) | ((uint32_t)stream_data[1] << 8) | ((uint32_t)stream_data[0]);
 		int32_t magic = ((int32_t)stream_data[4] << 24) | ((int32_t)stream_data[5] << 16) | ((int32_t)stream_data[6] << 8) | ((int32_t)stream_data[7]);
-		stream_data = ((const char*)(stream_data)+8); remainingLength -= 8;
+		stream_data = ((char*)(stream_data)+8); remainingLength -= 8;
 		if (magic != 0x57415645) return NULL;     /* "WAVE" */ //ALUT_ERROR_UNSUPPORTED_FILE_SUBTYPE
 		while (1) {
 			if (remainingLength < 8) return NULL; //ALUT_ERROR_CORRUPT_OR_TRUNCATED_DATA
 			magic = ((int32_t)stream_data[0] << 24) | ((int32_t)stream_data[1] << 16) | ((int32_t)stream_data[2] << 8) | ((int32_t)stream_data[3]);
 			chunkLength = ((uint32_t)stream_data[7] << 24) | ((uint32_t)stream_data[6] << 16) | ((uint32_t)stream_data[5] << 8) | ((uint32_t)stream_data[4]);
-			stream_data = ((const char*)(stream_data)+8); remainingLength -= 8;
+			stream_data = ((char*)(stream_data)+8); remainingLength -= 8;
 			if (magic == 0x666d7420) { /* "fmt " */
 				found_header = AL_TRUE;
 				if (chunkLength < 16 || remainingLength < chunkLength) return NULL;  //ALUT_ERROR_CORRUPT_OR_TRUNCATED_DATA || ALUT_ERROR_CORRUPT_OR_TRUNCATED_DATA
@@ -126,7 +126,7 @@ ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_leng
 				//uint32_t byteRate = ((uint32_t) stream_data[11] << 24) | ((uint32_t) stream_data[10] << 16) | ((uint32_t) stream_data[9] << 8) | ((uint32_t) stream_data[8]);
 				blockAlign = ((uint16_t)stream_data[13] << 8) | ((uint16_t)stream_data[12]);
 				bitsPerSample = ((uint16_t)stream_data[15] << 8) | ((uint16_t)stream_data[14]);
-				stream_data = ((const char*)(stream_data)+chunkLength); remainingLength -= chunkLength;
+				stream_data = ((char*)(stream_data)+chunkLength); remainingLength -= chunkLength;
 				switch (audioFormat) {
 				case 1: codec = (bitsPerSample == 8 || isLittleEndian) ? Linear : PCM16; break; /* PCM */
 				case 6: bitsPerSample *= 2; codec = ALaw; break; /* aLaw */
@@ -144,11 +144,11 @@ ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_leng
 			}
 			else {
 				if (remainingLength < chunkLength) return NULL; // ALUT_ERROR_CORRUPT_OR_TRUNCATED_DATA
-				stream_data = ((const char*)(stream_data)+chunkLength); remainingLength -= chunkLength;
+				stream_data = ((char*)(stream_data)+chunkLength); remainingLength -= chunkLength;
 			}
 
 			if ((chunkLength & 1) && !(remainingLength == 0)) {
-				stream_data = ((const char*)(stream_data)+1); remainingLength -= 1;
+				stream_data = ((char*)(stream_data)+1); remainingLength -= 1;
 			}
 		}
 
@@ -160,11 +160,11 @@ ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_leng
 		int32_t encoding = ((int32_t)stream_data[8] << 24) | ((int32_t)stream_data[9] << 16) | ((int32_t)stream_data[10] << 8) | ((int32_t)stream_data[11]);
 		sampleFrequency = ((int32_t)stream_data[12] << 24) | ((int32_t)stream_data[13] << 16) | ((int32_t)stream_data[14] << 8) | ((int32_t)stream_data[15]);
 		numChannels = ((int32_t)stream_data[16] << 24) | ((int32_t)stream_data[17] << 16) | ((int32_t)stream_data[18] << 8) | ((int32_t)stream_data[19]);
-		stream_data = ((const char*)(stream_data)+20); remainingLength -= 20;
+		stream_data = ((char*)(stream_data)+20); remainingLength -= 20;
 		length = (len == -1) ? (remainingLength - AU_HEADER_SIZE - dataOffset) : (size_t)len;
 
 		if (dataOffset < AU_HEADER_SIZE || length <= 0 || sampleFrequency < 1 || numChannels < 1 || remainingLength < (dataOffset - AU_HEADER_SIZE) + length) return NULL; //ALUT_ERROR_CORRUPT_OR_TRUNCATED_DATA
-		stream_data = ((const char*)(stream_data)+dataOffset - AU_HEADER_SIZE); remainingLength -= dataOffset - AU_HEADER_SIZE;
+		stream_data = ((char*)(stream_data)+dataOffset - AU_HEADER_SIZE); remainingLength -= dataOffset - AU_HEADER_SIZE;
 		switch (encoding) {
 		case AU_ULAW_8: bitsPerSample = 16; codec = ULaw; break;
 		case AU_PCM_8: bitsPerSample = 8; codec = PCM8s; break;
@@ -199,7 +199,7 @@ ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_leng
 	default:
 		fmt_flag = AL_FALSE; break;
 	}
-	if (!fmt_flag) { free(data); return NULL; } //ALUT_ERROR_UNSUPPORTED_FILE_SUBTYPE
+	if (!fmt_flag) return NULL; //{ free(data); return NULL; } //ALUT_ERROR_UNSUPPORTED_FILE_SUBTYPE
 	if (format != NULL) *format = fmt;
 
 	switch (codec) {
@@ -262,7 +262,7 @@ ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_leng
 			}
 			buf[i] = (a_val & SIGN_BIT) ? t : -t;
 		}
-		free(data);
+		//free(data);
 		if (size != NULL) *size = (ALsizei)length * 2; return buf;
 	case IMA4:
         ;
@@ -337,7 +337,7 @@ ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_leng
 				ptr += numChannels * 8;
 			}
 		}
-		free(data);
+		//free(data);
 		if (size != NULL) *size = (ALsizei)effective_length; return buf;
 	}
 }
