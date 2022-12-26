@@ -268,7 +268,7 @@ ALvoid* alutLoadMemoryFromFileImage(const ALvoid* param_data, ALsizei param_leng
         ;
 		uint8_t* d = (uint8_t*)data;
 		size_t blocks = length / blockAlign, effective_length = (blockAlign - numChannels) * blocks * 4;
-		int16_t* buf = (int16_t)malloc(effective_length == 0 ? 1 : effective_length), * ptr = buf, * ptr_ch; //only move ptr/ptr_ch, not buf
+		int16_t* buf = (int16_t*)malloc(effective_length == 0 ? 1 : effective_length), * ptr = buf, * ptr_ch; //only move ptr/ptr_ch, not buf
 		if (buf == NULL) {
 			return NULL; //ALUT_ERROR_OUT_OF_MEMORY
 		}
