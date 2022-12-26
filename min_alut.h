@@ -2,6 +2,8 @@
 #include "alad.h"
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #define ALUT_WAVEFORM_SINE                     0x100
 #define ALUT_WAVEFORM_SQUARE                   0x101
