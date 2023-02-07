@@ -286,6 +286,8 @@ ALvoid* alutLoadMemoryFromFileImage(ALvoid* param_data, ALsizei param_length, AL
 			for (size_t j = numChannels * 4; j < blockAlign;) {
 				for (size_t chn = 0; chn < numChannels; chn++) {
 					ptr_ch = ptr + chn;
+					
+					
 					for (size_t q = 0; q < 8; q++) {
 						nibble = (q % 2 == 0) ? (*d & 0xf) : (*d++ >> 4); //different behaviour in even and odd cycles
 						/*From: http://www.multimedia.cx/simpleaudio.html#tth_sEc4.2 */
@@ -323,7 +325,9 @@ ALvoid* alutLoadMemoryFromFileImage(ALvoid* param_data, ALsizei param_length, AL
 						*/
 
                         //the same calculation as above, but branchless
-						predictor_val += (-1 + ((nibble & 0x8) == 0)*2) * ((((delta & 4) != 0)*step) + (((delta & 2) != 0) * (step >> 1)) + (((delta & 1) != 0) * (step >> 2)) + (step >> 3));
+						predictor_val += (-1 + ((nibble & 0x8) == 0)*2) *
+						    ((((delta & 4) != 0)*step) + (((delta & 2) != 0) * (step >> 1)) +
+										(((delta & 1) != 0) * (step >> 2)) + (step >> 3));
 
 
 						predictor[chn] = predictor_val;
@@ -332,6 +336,25 @@ ALvoid* alutLoadMemoryFromFileImage(ALvoid* param_data, ALsizei param_length, AL
 						*ptr_ch = predictor_val;
 						ptr_ch += numChannels;
 					}
+					
+					// unrolled:
+					/*
+					for(int irrelevant_tbd_counter = 0; irrelevant_tbd_counter < 4; irrelevant_tbd_counter++) {
+						
+					 uint8_t current_byte = *d;
+					 bool bits_of_current_byte[8] = {current_byte & 0x1, current_byte & 0x2,
+					 	current_byte & 0x4, current_byte & 0x8,
+					 	current_byte & 0x10, current_byte & 0x20, current_byte & 0x40,
+						 current_byte & 0x80 };
+						
+						
+						
+						//analyze step_table values in bytes!
+
+					}
+					*/
+									
+					
 				}
 				j += numChannels * 4;
 				ptr += numChannels * 8;
